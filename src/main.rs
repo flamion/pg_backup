@@ -47,10 +47,7 @@ struct Args {
 
 fn generate_timestamp_string() -> String {
     let now = Local::now();
-    format!(
-        "{}",
-        now.format(Config::DATETIME_FORMAT),
-    )
+    format!("{}", now.format(Config::DATETIME_FORMAT),)
 }
 
 fn check_zstd_available() -> bool {
@@ -64,10 +61,7 @@ fn check_zstd_available() -> bool {
 }
 
 fn should_add_host_arg(host: &str) -> bool {
-    host != "localhost" 
-    && host != "127.0.0.1" 
-    && host != "::1"
-    && !host.is_empty()
+    host != "localhost" && host != "127.0.0.1" && host != "::1" && !host.is_empty()
 }
 
 /// Gets list of non-system databases
@@ -86,9 +80,7 @@ fn get_databases(host: &str, port: &str, user: &str) -> Result<Vec<String>> {
 
     cmd.args(["-p", port, "-U", user, "-t", "-c", query]);
 
-    let output = cmd
-        .output()
-        .context("Failed to execute psql command")?;
+    let output = cmd.output().context("Failed to execute psql command")?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -114,11 +106,14 @@ fn validate_or_create_output_dir(output_dir: &Path) -> Result<()> {
         let non_backup_files: Vec<_> = std::fs::read_dir(output_dir)?
             .filter_map(|entry| entry.ok())
             .filter(|entry| {
-                entry.path().is_file()
-                    && !matches!(
-                        entry.path().extension().and_then(|s| s.to_str()),
-                        Some("sql") | Some("zst")
-                    )
+                let path = entry.path();
+
+                if !path.is_file() {
+                    return false;
+                }
+
+                path.extension()
+                    .map_or(true, |ext| ext != "sql" && ext != "zst")
             })
             .collect();
 
