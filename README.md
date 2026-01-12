@@ -6,7 +6,6 @@ Command-line utility to back up PostgreSQL databases with optional zstd compress
 - Back up a specific database or all non-system databases in one run.
 - Optional zstd compression (level 18 by default, uses all available cores).
 - Output directory validation to avoid mixing non-backup files.
-- Host flag skipped for local connections; supports host, port, user overrides.
 
 ## Requirements
 - PostgreSQL client tools: `psql`, `pg_dump`
