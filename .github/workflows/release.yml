@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*"
+      - "**"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Determine release type
+        id: release_type
+        run: |
+          git fetch --no-tags origin meister
+
+          if git merge-base --is-ancestor "$GITHUB_SHA" "origin/meister"; then
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build release binary
+        run: cargo build --locked --release
+
+      - name: Package release asset
+        run: |
+          mkdir -p dist
+          tar -C target/release -czf "dist/pg_backup-${GITHUB_REF_NAME}-x86_64-unknown-linux-gnu.tar.gz" pg_backup
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          prerelease: ${{ steps.release_type.outputs.prerelease }}
+          generate_release_notes: true
+          files: dist/pg_backup-${{ github.ref_name }}-x86_64-unknown-linux-gnu.tar.gz
